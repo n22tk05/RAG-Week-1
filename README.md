@@ -9,11 +9,12 @@
 * **Người kiểm thử / Reviewer:** Đánh giá độ chính xác của ngữ cảnh (context) và nguồn trích dẫn được trả về sau khi tải tài liệu lên.
 
 ## 3. Tech Stack đề xuất
-* **Ngôn ngữ:** TypeScript (đồng nhất Frontend & Backend)
+* **Ngôn ngữ:** TypeScript
 * **LLM Orchestration:** LangChain.js / LangGraph.js
-* **Backend:** Node.js (Express / Fastify hoặc Next.js API Routes)
-* **Frontend:** React.js (tối giản, ưu tiên tính năng hơn thẩm mỹ)
-* **Vector Store & Embeddings:** In-Memory Vector Store (MemoryVectorStore) / Chroma / Pinecone / PGVector kết hợp OpenAI Text Embeddings (hoặc tương đương)
+* **Backend:** Node.js (Express)
+* **Frontend:** React.js
+* **LLM & Embeddings:** OpenAI (`gpt-4o-mini`, `text-embedding-3-small` - 1536 chiều)
+* **Vector Store:** Supabase Vector DB (PostgreSQL với extension `pgvector`)
 
 ## 4. Ngoài phạm vi (Out of Scope)
 * **Production Readiness:** Không xử lý caching phân tán, monitoring, tracing nâng cao hay CI/CD tự động.
@@ -23,7 +24,8 @@
 
 ## 5. Tiêu chuẩn hoàn thành (DoD - Definition of Done)
 - [ ] **Upload & Ingestion:** Người dùng upload được file văn bản (tối thiểu định dạng `.txt` hoặc `.pdf`). Hệ thống đọc nội dung, chia nhỏ thành các chunks theo cấu hình (chunk size, overlap).
-- [ ] **Embedding & Vector Storage:** Chunks được chuyển đổi thành vector embedding và lưu thành công vào Vector DB.
+- [ ] **Embedding & Vector Storage:** Chunks được chuyển đổi thành vector embedding (1536 chiều) và lưu thành công vào Supabase Vector DB.
 - [ ] **Contextual Retrieval:** Khi gửi câu hỏi, hệ thống truy vấn được top-k chunks có độ tương đồng cao nhất từ Vector DB.
 - [ ] **Answer Generation with Source Citation:** LLM sinh câu trả lời chính xác dựa trên ngữ cảnh đã truy xuất và hiển thị rõ ràng thông tin nguồn (tên file, đoạn văn/trang tham chiếu).
 - [ ] **Chạy độc lập (Local Setup):** Có file cấu hình biến môi trường (`.env.example`) và tài liệu hướng dẫn chạy code local từ đầu đến cuối thành công.
+- [ ] **Deploy:** Triển khai ứng dụng thành công lên nền tảng đám mây (Vercel, Render hoặc tương đương) kèm cấu hình đầy đủ biến môi trường, có URL truy cập công khai để kiểm thử.
