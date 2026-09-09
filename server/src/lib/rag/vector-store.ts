@@ -6,10 +6,6 @@ import { config, validateConfig } from "../../config.js";
 
 validateConfig();
 
-/**
- * Adapter Embeddings cho Google Gemini gemini-embedding-001
- * Hỗ trợ Matryoshka embeddings: tự động xuất ra vector 1536 chiều khớp với bảng documents Supabase
- */
 export class GeminiEmbeddings extends Embeddings {
   private modelClient: ReturnType<GoogleGenerativeAI["getGenerativeModel"]>;
   public dimensions: number;
@@ -70,9 +66,7 @@ export const vectorStore = new SupabaseVectorStore(embeddings, {
   queryName: "match_documents",
 });
 
-/**
- * Lấy danh sách các tài liệu đã index trong database Supabase
- */
+
 export async function getIndexedDocuments(limit = 100) {
   const { data, error } = await supabaseClient
     .from("documents")
@@ -87,9 +81,6 @@ export async function getIndexedDocuments(limit = 100) {
   return data;
 }
 
-/**
- * Thống kê tổng số chunk và danh sách các nguồn file đã được nạp
- */
 export async function getIngestionStats() {
   const { data, error, count } = await supabaseClient
     .from("documents")
@@ -114,9 +105,7 @@ export async function getIngestionStats() {
   };
 }
 
-/**
- * Xóa các documents theo tên file nguồn (source)
- */
+
 export async function deleteDocumentsBySource(source: string) {
   const { data, error } = await supabaseClient
     .from("documents")

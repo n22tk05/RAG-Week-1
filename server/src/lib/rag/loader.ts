@@ -1,11 +1,5 @@
 import { PDFParse } from "pdf-parse";
 
-/**
- * Trích xuất nội dung văn bản từ buffer của các file .txt, .md hoặc .pdf
- * @param buffer Buffer dữ liệu của file tải lên
- * @param filename Tên file gốc (bao gồm đuôi mở rộng)
- * @returns Nội dung văn bản thô đã được làm sạch
- */
 export async function loadDocument(buffer: Buffer, filename: string): Promise<string> {
   if (!buffer || buffer.length === 0) {
     throw new Error(`Tệp tin "${filename}" bị rỗng (0 bytes).`);

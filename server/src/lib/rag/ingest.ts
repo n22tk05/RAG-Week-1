@@ -17,12 +17,7 @@ export interface IngestResult {
   previewChunks?: { index: number; contentSnippet: string }[];
 }
 
-/**
- * Điều phối quy trình nạp tài liệu:
- * 1. Trích xuất text thuần từ buffer (.txt, .md, .pdf)
- * 2. Chia nhỏ văn bản thành các chunks kèm metadata
- * 3. Tạo vector embeddings và lưu trữ vào Supabase Vector DB
- */
+
 export async function ingestDocument(options: IngestOptions): Promise<IngestResult> {
   const startTime = Date.now();
   const { buffer, filename, metadata = {} } = options;

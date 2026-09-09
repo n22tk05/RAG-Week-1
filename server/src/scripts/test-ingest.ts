@@ -11,7 +11,6 @@ async function runTest() {
   console.log("🚀 Bắt đầu kiểm thử pipeline Ingestion (Phase 2)");
   console.log("=================================================\n");
 
-  // 1. Test Text/Markdown Loader
   console.log("--- Test 1: Nạp tệp tin Text (.txt) ---");
   const sampleText = `
 Kiến trúc RAG (Retrieval-Augmented Generation) là một kỹ thuật tiên tiến kết hợp giữa mô hình ngôn ngữ lớn (LLM) và hệ thống truy xuất thông tin từ cơ sở dữ liệu bên ngoài.
@@ -35,9 +34,7 @@ Các bước chính trong quy trình nạp tài liệu (Ingestion Pipeline) bao 
 
   console.log("✅ Kết quả Test 1:", result1);
 
-  // 2. Test PDF Loader (Minimal valid PDF buffer)
   console.log("\n--- Test 2: Kiểm tra trích xuất file PDF thô ---");
-  // Tạo buffer PDF hợp lệ chứa text "Hello RAG PDF Ingestion"
   const minimalPdfString = `%PDF-1.4
 1 0 obj
 << /Type /Catalog /Pages 2 0 R >>

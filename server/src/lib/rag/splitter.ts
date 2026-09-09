@@ -17,13 +17,7 @@ export interface ChunkMetadata {
   [key: string]: unknown;
 }
 
-/**
- * Chia nhỏ raw text thành danh sách Document chunks của LangChain kèm metadata
- * @param text Nội dung văn bản thô
- * @param source Tên tệp tin gốc
- * @param additionalMetadata Metadata bổ sung nếu có
- * @returns Danh sách các Document objects với metadata chi tiết
- */
+
 export async function splitTextToChunks(
   text: string,
   source: string,
