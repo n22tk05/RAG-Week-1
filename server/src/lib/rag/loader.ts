@@ -19,7 +19,7 @@ export async function loadDocument(buffer: Buffer, filename: string): Promise<st
     rawText = buffer.toString("utf-8");
   } else if (ext === "pdf") {
     try {
-      const parser = new PDFParse({ data: buffer });
+      const parser = new PDFParse({ data: new Uint8Array(buffer) });
       const result = await parser.getText();
       await parser.destroy();
       rawText = result.text || "";
