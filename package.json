@@ -8,9 +8,21 @@
     "dev:client": "npm --prefix client run dev",
     "test:ingest": "npm --prefix server run test:ingest",
     "test:qa": "npm --prefix server run test:qa",
-    "build:client": "npm --prefix client run build"
+    "build:client": "npm --prefix client install && npm --prefix client run build",
+    "build": "npm --prefix client install && npm --prefix client run build"
   },
-  "keywords": ["rag", "langchain", "gemini", "supabase", "pgvector", "typescript", "react"],
+  "keywords": [
+    "rag",
+    "langchain",
+    "gemini",
+    "supabase",
+    "pgvector",
+    "typescript",
+    "react"
+  ],
   "author": "",
-  "license": "MIT"
+  "license": "MIT",
+  "dependencies": {
+    "vercel": "^59.15.1"
+  }
 }

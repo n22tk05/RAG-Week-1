@@ -156,7 +156,7 @@ export const DocumentPanel: React.FC<DocumentPanelProps> = ({ onDocumentIndexed 
           <p className="text-xs text-slate-300 font-medium truncate">
             {selectedFile ? selectedFile.name : "Kéo thả hoặc nhấp để chọn tệp"}
           </p>
-          <p className="text-[11px] text-slate-400 mt-1">Hỗ trợ .txt, .md, .pdf (tối đa 15MB)</p>
+          <p className="text-[11px] text-slate-400 mt-1">Hỗ trợ .txt, .md, .pdf (tối đa 4.5MB)</p>
         </div>
 
         {uploadStatus && (

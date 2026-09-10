@@ -11,3 +11,5 @@ Thumbs.db
 .agentkit
 .agents
 plans
+.vercel
+.env*

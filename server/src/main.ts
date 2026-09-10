@@ -5,7 +5,11 @@ import { ingestRouter } from "./routes/ingest.route.js";
 import { chatRouter } from "./routes/chat.route.js";
 import { documentsRouter } from "./routes/documents.route.js";
 
-validateConfig();
+try {
+  validateConfig();
+} catch (err: any) {
+  console.warn("⚠️ [Config Warning]:", err?.message);
+}
 
 const app = express();
 const PORT = config.port;
@@ -34,6 +38,10 @@ app.get("/", (_req, res) => {
   res.send("Minimal RAG Engine API is running. Access endpoints via /api/*");
 });
 
-app.listen(PORT, () => {
-  console.log(`🚀 Minimal RAG Engine Server is running on http://localhost:${PORT}`);
-});
+if (process.env.VERCEL !== "1") {
+  app.listen(PORT, () => {
+    console.log(`🚀 Minimal RAG Engine Server is running on http://localhost:${PORT}`);
+  });
+}
+
+export default app;
