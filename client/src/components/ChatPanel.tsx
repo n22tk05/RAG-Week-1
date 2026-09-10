@@ -145,7 +145,7 @@ export const ChatPanel: React.FC = () => {
                   : "bg-slate-800 text-slate-100 rounded-bl-none border border-slate-700/80 shadow-sm"
               }`}
             >
-              <div className="whitespace-pre-wrap">{msg.content}</div>
+              <div className="whitespace-pre-wrap text-left">{msg.content}</div>
 
               {msg.timeMs && (
                 <div className="text-[10px] text-slate-400 mt-2 text-right">

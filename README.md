@@ -1,5 +1,10 @@
 # Minimal RAG Engine (TypeScript / LangChain / Gemini / Supabase)
 
+> 🚀 **Live Demo:** [https://rag-week-1.vercel.app](https://rag-week-1.vercel.app)
+> 
+> 🌐 **Production URL:** [https://rag-week-1.vercel.app](https://rag-week-1.vercel.app)  
+> Ứng dụng Minimal RAG Engine đã được triển khai hoàn chỉnh trên **Vercel** (Fullstack Monorepo gồm React Vite Client + Express Serverless API kết nối Supabase pgvector & Gemini AI). Chi tiết xem tại [docs/deployment.md](docs/deployment.md).
+
 ## 1. Mục tiêu (Objective)
 * Xây dựng một ứng dụng Proof of Concept (PoC) về quy trình Retrieval-Augmented Generation (RAG) end-to-end: **Upload tài liệu (.txt, .md, .pdf) → Chunking (RecursiveCharacterTextSplitter) → Embedding (1536d) → Lưu Vector DB (Supabase pgvector) → Hỏi đáp ngữ cảnh (Anti-Hallucination) kèm trích dẫn nguồn (Source Citations)**.
 * Cung cấp một bộ khung mã nguồn sạch sẽ, phân tầng rõ ràng bằng TypeScript cho cả Backend (Node.js/Express) và Frontend (React/Tailwind CSS).
@@ -108,4 +113,4 @@ Truy cập giao diện tại: **http://localhost:5173**
 - [x] **Contextual Retrieval:** Khi gửi câu hỏi, hệ thống truy vấn được top-k chunks có độ tương đồng cao nhất từ Vector DB qua `similaritySearchWithScore`.
 - [x] **Answer Generation with Source Citation:** LLM sinh câu trả lời chính xác dựa trên ngữ cảnh đã truy xuất và hiển thị rõ ràng thông tin nguồn (tên file, đoạn văn/trang tham chiếu, điểm tương đồng). Có cơ chế từ chối khi câu hỏi ngoài tài liệu (Anti-Hallucination).
 - [x] **Chạy độc lập (Local Setup):** Có file cấu hình biến môi trường (`.env.example`), scripts CLI kiểm thử nhanh và tài liệu hướng dẫn chạy code local từ đầu đến cuối thành công.
-- [] **Deploy:** Deploy lên vercel
+- [x] **Deploy:** Đã deploy thành công lên Vercel: [https://rag-week-1.vercel.app](https://rag-week-1.vercel.app)
