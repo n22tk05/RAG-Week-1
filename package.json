@@ -3,6 +3,7 @@
   "version": "1.0.0",
   "private": true,
   "description": "Minimal RAG Engine with TypeScript, LangChain, Gemini and Supabase Vector DB",
+  "type": "module",
   "scripts": {
     "dev:server": "npm --prefix server run dev",
     "dev:client": "npm --prefix client run dev",
