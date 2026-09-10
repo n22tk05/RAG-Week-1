@@ -37,6 +37,3 @@ export async function loadDocument(buffer: Buffer, filename: string): Promise<st
 
   return trimmedText;
 }
-
-// Alias tương thích ngược
-export const loader = loadDocument;

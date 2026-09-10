@@ -5,7 +5,7 @@ create table if not exists documents (
   id bigserial primary key,
   content text not null,                  -- Nội dung đoạn chunk văn bản
   metadata jsonb default '{}'::jsonb,     -- Tên file, chunkIndex, createdAt, ...
-  embedding vector(1536) not null         -- Vector 1536 chiều từ OpenAI text-embedding-3-small
+  embedding vector(768) not null          -- Vector 768 chiều từ Gemini embedding-1
 );
 
 create index if not exists documents_embedding_idx 

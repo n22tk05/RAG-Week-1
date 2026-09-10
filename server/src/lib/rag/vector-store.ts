@@ -13,7 +13,7 @@ export class GeminiEmbeddings extends Embeddings {
   constructor(fields: { apiKey: string; modelName?: string; dimensions?: number } & EmbeddingsParams) {
     super(fields);
     const genAI = new GoogleGenerativeAI(fields.apiKey);
-    this.dimensions = fields.dimensions ?? 1536;
+    this.dimensions = fields.dimensions ?? 768;
     this.modelClient = genAI.getGenerativeModel({
       model: fields.modelName || "gemini-embedding-001",
     });
@@ -48,11 +48,11 @@ export class GeminiEmbeddings extends Embeddings {
   }
 }
 
-// Khởi tạo embeddings với Gemini gemini-embedding-001 xuất chuẩn 1536 chiều khớp với Supabase hiện tại
+// Khởi tạo embeddings với Gemini 
 export const embeddings = new GeminiEmbeddings({
   apiKey: config.geminiApiKey,
   modelName: "gemini-embedding-001",
-  dimensions: 1536,
+  dimensions: 768,
 });
 
 export const supabaseClient = createClient(
