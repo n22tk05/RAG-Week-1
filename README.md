@@ -14,7 +14,7 @@
 * **LLM Orchestration:** LangChain.js (`@langchain/core`, `@langchain/google-genai`, `@langchain/textsplitters`)
 * **Backend:** Node.js, Express, Multer, Cors, tsx
 * **Frontend:** React 19, Vite, Tailwind CSS
-* **LLM & Embeddings:** Google Gemini (`gemini-embedding-001` - 1536 chiều qua Matryoshka, `gemini-3.6-flash` với `temperature: 0`)
+* **LLM & Embeddings:** Google Gemini (`gemini-embedding-001` - 768 chiều qua Matryoshka, `gemini-3.6-flash` với `temperature: 0`)
 * **Vector Store:** Supabase Vector DB (PostgreSQL với extension `pgvector` và hàm RPC `match_documents`)
 
 ## 3. Cấu trúc Dự án
