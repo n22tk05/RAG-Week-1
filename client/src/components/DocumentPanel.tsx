@@ -187,17 +187,13 @@ export const DocumentPanel: React.FC<DocumentPanelProps> = ({ onDocumentIndexed 
               Đang chia chunk & tạo vector...
             </>
           ) : (
-            <>⚡ Tải lên & Index vào Supabase</>
+            <>Tải lên </>
           )}
         </button>
       </form>
 
       {/* Database Statistics */}
-      <div className="grid grid-cols-2 gap-2 mb-4">
-        <div className="p-3 bg-slate-900/60 border border-slate-700/60 rounded-lg">
-          <div className="text-[11px] text-slate-400 font-medium">Tổng đoạn chunks</div>
-          <div className="text-lg font-bold text-indigo-400 mt-0.5">{stats.totalChunks}</div>
-        </div>
+      <div className="gap-2 mb-4">
         <div className="p-3 bg-slate-900/60 border border-slate-700/60 rounded-lg">
           <div className="text-[11px] text-slate-400 font-medium">Tệp nguồn</div>
           <div className="text-lg font-bold text-emerald-400 mt-0.5">{stats.uniqueSources.length}</div>

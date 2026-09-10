@@ -116,7 +116,7 @@ startxref
         ? embeddingVal.replace(/[\[\]]/g, "").split(",").length
         : "unknown";
     console.log(
-      `✅ Vector embedding tồn tại trên row ID ${vectorCheck[0].id}, số chiều đo được: ${parsedDim} (mong muốn: 1536 chiều khớp với Supabase).`,
+      `✅ Vector embedding tồn tại trên row ID ${vectorCheck[0].id}, số chiều đo được: ${parsedDim} (mong muốn: 768 chiều khớp với Supabase).`,
     );
   }
 
