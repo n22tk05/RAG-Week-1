@@ -4,25 +4,30 @@ import { GoogleGenerativeAI } from "@google/generative-ai";
 import { SupabaseVectorStore } from "@langchain/community/vectorstores/supabase";
 import { config, validateConfig } from "../../config.js";
 
-validateConfig();
+const hasSupabaseConfig = Boolean(config.supabaseUrl && config.supabasePrivateKey);
 
 export class GeminiEmbeddings extends Embeddings {
-  private modelClient: ReturnType<GoogleGenerativeAI["getGenerativeModel"]>;
+  private modelClient: ReturnType<GoogleGenerativeAI["getGenerativeModel"]> | null = null;
   public dimensions: number;
 
   constructor(fields: { apiKey: string; modelName?: string; dimensions?: number } & EmbeddingsParams) {
     super(fields);
-    const genAI = new GoogleGenerativeAI(fields.apiKey);
     this.dimensions = fields.dimensions ?? 768;
-    this.modelClient = genAI.getGenerativeModel({
-      model: fields.modelName || "gemini-embedding-001",
-    });
+    if (fields.apiKey) {
+      const genAI = new GoogleGenerativeAI(fields.apiKey);
+      this.modelClient = genAI.getGenerativeModel({
+        model: fields.modelName || "gemini-embedding-001",
+      });
+    }
   }
 
   async embedDocuments(documents: string[]): Promise<number[][]> {
+    if (!this.modelClient) {
+      throw new Error("Chưa cấu hình GEMINI_API_KEY. Vui lòng kiểm tra biến môi trường trên Vercel / .env");
+    }
     return Promise.all(
       documents.map(async (doc) => {
-        const res = await this.modelClient.embedContent({
+        const res = await this.modelClient!.embedContent({
           content: { role: "user", parts: [{ text: doc }] },
           outputDimensionality: this.dimensions,
         } as any);
@@ -36,6 +41,9 @@ export class GeminiEmbeddings extends Embeddings {
   }
 
   async embedQuery(document: string): Promise<number[]> {
+    if (!this.modelClient) {
+      throw new Error("Chưa cấu hình GEMINI_API_KEY. Vui lòng kiểm tra biến môi trường trên Vercel / .env");
+    }
     const res = await this.modelClient.embedContent({
       content: { role: "user", parts: [{ text: document }] },
       outputDimensionality: this.dimensions,
@@ -48,16 +56,16 @@ export class GeminiEmbeddings extends Embeddings {
   }
 }
 
-// Khởi tạo embeddings với Gemini 
+// Khởi tạo embeddings với Gemini an toàn
 export const embeddings = new GeminiEmbeddings({
-  apiKey: config.geminiApiKey,
+  apiKey: config.geminiApiKey || "",
   modelName: "gemini-embedding-001",
   dimensions: 768,
 });
 
 export const supabaseClient = createClient(
-  config.supabaseUrl,
-  config.supabasePrivateKey
+  hasSupabaseConfig ? config.supabaseUrl : "https://placeholder.supabase.co",
+  hasSupabaseConfig ? config.supabasePrivateKey : "placeholder-key"
 );
 
 export const vectorStore = new SupabaseVectorStore(embeddings, {

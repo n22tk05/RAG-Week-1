@@ -4,8 +4,6 @@ import { config, validateConfig } from "../../config.js";
 import { searchSimilarDocuments } from "./retriever.js";
 import { SYSTEM_PROMPT, formatContext } from "./prompt.js";
 
-validateConfig();
-
 export interface SourceCitation {
   source: string;
   content: string;
@@ -23,10 +21,11 @@ export interface QAResponse {
 export const chatModel = new ChatGoogleGenerativeAI({
   model: "gemini-3.6-flash",
   temperature: 0,
-  apiKey: config.geminiApiKey,
+  apiKey: config.geminiApiKey || "placeholder-key",
 });
 
 export async function askQuestion(question: string, topK = 4): Promise<QAResponse> {
+  validateConfig();
   const startTime = Date.now();
   const trimmed = question.trim();
 
