@@ -108,4 +108,4 @@ Truy cập giao diện tại: **http://localhost:5173**
 - [x] **Contextual Retrieval:** Khi gửi câu hỏi, hệ thống truy vấn được top-k chunks có độ tương đồng cao nhất từ Vector DB qua `similaritySearchWithScore`.
 - [x] **Answer Generation with Source Citation:** LLM sinh câu trả lời chính xác dựa trên ngữ cảnh đã truy xuất và hiển thị rõ ràng thông tin nguồn (tên file, đoạn văn/trang tham chiếu, điểm tương đồng). Có cơ chế từ chối khi câu hỏi ngoài tài liệu (Anti-Hallucination).
 - [x] **Chạy độc lập (Local Setup):** Có file cấu hình biến môi trường (`.env.example`), scripts CLI kiểm thử nhanh và tài liệu hướng dẫn chạy code local từ đầu đến cuối thành công.
-- [x] **Deploy:** Cung cấp `Dockerfile` multi-stage build sẵn sàng deploy lên Render / Railway / Docker host với cấu hình biến môi trường đầy đủ.
+- [] **Deploy:** Deploy lên vercel

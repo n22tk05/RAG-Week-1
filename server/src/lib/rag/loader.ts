@@ -1,4 +1,13 @@
-import { PDFParse } from "pdf-parse";
+// Polyfills cho pdfjs-dist trong môi trường serverless Node.js
+if (typeof (globalThis as any).DOMMatrix === "undefined") {
+  (globalThis as any).DOMMatrix = class DOMMatrix {};
+}
+if (typeof (globalThis as any).Path2D === "undefined") {
+  (globalThis as any).Path2D = class Path2D {};
+}
+if (typeof (globalThis as any).ImageData === "undefined") {
+  (globalThis as any).ImageData = class ImageData {};
+}
 
 export async function loadDocument(buffer: Buffer, filename: string): Promise<string> {
   if (!buffer || buffer.length === 0) {
@@ -19,6 +28,7 @@ export async function loadDocument(buffer: Buffer, filename: string): Promise<st
     rawText = buffer.toString("utf-8");
   } else if (ext === "pdf") {
     try {
+      const { PDFParse } = await import("pdf-parse");
       const parser = new PDFParse({ data: new Uint8Array(buffer) });
       const result = await parser.getText();
       await parser.destroy();
