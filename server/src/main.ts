@@ -1,17 +1,39 @@
-import dotenv from "dotenv"
-import express from 'express'
-import cors from 'cors'
-dotenv.config()
+import express from "express";
+import cors from "cors";
+import { config, validateConfig } from "./config.js";
+import { ingestRouter } from "./routes/ingest.route.js";
+import { chatRouter } from "./routes/chat.route.js";
+import { documentsRouter } from "./routes/documents.route.js";
 
-const PORT = process.env.PORT || 5000
-const app = express()
+validateConfig();
 
-app.use(cors())
-app.use(express.json())
-app.use(express.urlencoded({ extended : true}))
-app.listen(PORT ,() => {
-    console.log('port', PORT)
-})
-app.get('', (req, res) => {
-    res.json("Hello World")
-})
+const app = express();
+const PORT = config.port;
+
+// Middleware
+app.use(cors({ origin: "*" }));
+app.use(express.json({ limit: "15mb" }));
+app.use(express.urlencoded({ extended: true, limit: "15mb" }));
+
+// Mount API Routes
+app.use("/api/ingest", ingestRouter);
+app.use("/api/chat", chatRouter);
+app.use("/api/documents", documentsRouter);
+
+// Health check endpoint
+app.get("/api/health", (_req, res) => {
+  res.json({
+    status: "ok",
+    timestamp: new Date().toISOString(),
+    service: "Minimal RAG Engine Server",
+  });
+});
+
+// Root fallback
+app.get("/", (_req, res) => {
+  res.send("Minimal RAG Engine API is running. Access endpoints via /api/*");
+});
+
+app.listen(PORT, () => {
+  console.log(`🚀 Minimal RAG Engine Server is running on http://localhost:${PORT}`);
+});

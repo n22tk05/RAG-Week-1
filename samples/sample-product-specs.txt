@@ -1,0 +1,22 @@
+THÔNG SỐ KỸ THUẬT VÀ HƯỚNG DẪN SẢN PHẨM: DRONE TỰ HÀNH AEROX-500 PRO
+Phiên bản: 3.2.0 | Nhà sản xuất: AeroDynamics Corp | Ngày phát hành: 15/01/2026
+
+1. TỔNG QUAN SẢN PHẨM
+AeroX-500 Pro là thiết bị máy bay không người lái (UAV) công nghiệp được thiết kế cho các nhiệm vụ cứu hộ, trắc địa và tuần tra đường ống năng lượng. Thiết bị tích hợp cảm biến LiDAR tầm quét 300m và camera quang học 8K zoom quang học 30x.
+
+2. THÔNG SỐ KỸ THUẬT PHẦN CỨNG
+- Trọng lượng cất cánh tối đa (MTOW): 6.8 kg
+- Vận tốc bay tối đa: 85 km/h (trong chế độ Sport Mode)
+- Trần bay tối đa: 4.500m so với mực nước biển
+- Thời gian bay liên tục: 55 phút với pin kép thông minh AeroBattery Li-Po 12.000 mAh
+- Tầm hoạt động truyền tín hiệu OcuLink 4.0: 18 km không vật cản
+- Kháng gió tối đa: Cấp 7 (lên tới 16 m/s)
+- Tiêu chuẩn chống bụi & nước: IP67 (hoạt động được dưới trời mưa vừa và môi trường bùn đất)
+
+3. HỆ THỐNG AN TOÀN VÀ TRÁNH VA CHẠM
+- Cảm biến đa hướng 360 độ: 6 mắt cảm biến quang học kép và 2 cụm radar sóng milimet (mmWave) cho phép phát hiện chướng ngại vật từ khoảng cách 40m.
+- Tính năng Return-to-Home (RTH) tự động: Kích hoạt khi mất sóng quá 3 giây hoặc dung lượng pin giảm xuống dưới 15%.
+- Cơ chế hạ cánh khẩn cấp dù nhảy AeroParachute: Tự động bung dù trong thời gian 0.15 giây nếu phát hiện rơi tự do bất thường.
+
+4. BẢO HÀNH VÀ HỖ TRỢ
+Sản phẩm được bảo hành chính hãng 24 tháng đối với khung thân và động cơ, 12 tháng hoặc 300 chu kỳ sạc đối với pin thông minh.

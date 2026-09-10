@@ -1,0 +1,16 @@
+{
+  "name": "minimal-rag-engine",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Minimal RAG Engine with TypeScript, LangChain, Gemini and Supabase Vector DB",
+  "scripts": {
+    "dev:server": "npm --prefix server run dev",
+    "dev:client": "npm --prefix client run dev",
+    "test:ingest": "npm --prefix server run test:ingest",
+    "test:qa": "npm --prefix server run test:qa",
+    "build:client": "npm --prefix client run build"
+  },
+  "keywords": ["rag", "langchain", "gemini", "supabase", "pgvector", "typescript", "react"],
+  "author": "",
+  "license": "MIT"
+}
