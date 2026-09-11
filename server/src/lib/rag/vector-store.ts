@@ -25,19 +25,41 @@ export class GeminiEmbeddings extends Embeddings {
     if (!this.modelClient) {
       throw new Error("Chưa cấu hình GEMINI_API_KEY. Vui lòng kiểm tra biến môi trường trên Vercel / .env");
     }
-    return Promise.all(
-      documents.map(async (doc) => {
-        const res = await this.modelClient!.embedContent({
-          content: { role: "user", parts: [{ text: doc }] },
-          outputDimensionality: this.dimensions, // Tạo ra 768 dim
-        } as any);
-        const vals = res.embedding?.values;
-        if (!vals || vals.length === 0) {
-          throw new Error("Không nhận được vector embedding hợp lệ từ Gemini API.");
-        }
-        return vals;
-      })
-    );
+
+    const embedSingle = async (doc: string): Promise<number[]> => {
+      const res = await this.modelClient!.embedContent({
+        content: { role: "user", parts: [{ text: doc }] },
+        outputDimensionality: this.dimensions, // Tạo ra 768 dim
+      } as any);
+      const vals = res.embedding?.values;
+      if (!vals || vals.length === 0) {
+        throw new Error("Không nhận được vector embedding hợp lệ từ Gemini API.");
+      }
+      return vals;
+    };
+
+    // Nếu số lượng chunk <= 15, xử lý đồng thời trực tiếp không cần delay
+    if (documents.length <= 15) {
+      return Promise.all(documents.map(embedSingle));
+    }
+
+    // Nếu hơn 15 chunks: chia theo batch tối đa 15 chunks và thêm delay 1000ms giữa các batch để tránh vượt Rate Limit (429)
+    const BATCH_SIZE = 15;
+    const DELAY_MS = 1000;
+    const results: number[][] = [];
+
+    for (let i = 0; i < documents.length; i += BATCH_SIZE) {
+      const batch = documents.slice(i, i + BATCH_SIZE);
+      const batchEmbeddings = await Promise.all(batch.map(embedSingle));
+      results.push(...batchEmbeddings);
+
+      // Thêm delay nếu vẫn còn batch kế tiếp
+      if (i + BATCH_SIZE < documents.length) {
+        await new Promise((resolve) => setTimeout(resolve, DELAY_MS));
+      }
+    }
+
+    return results;
   }
 
   async embedQuery(document: string): Promise<number[]> {

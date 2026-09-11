@@ -8,7 +8,7 @@ import { documentsRouter } from "./routes/documents.route.js";
 try {
   validateConfig();
 } catch (err: any) {
-  console.warn("⚠️ [Config Warning]:", err?.message);
+  console.warn(" [Config Warning]:", err?.message);
 }
 
 const app = express();

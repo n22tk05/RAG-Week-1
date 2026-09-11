@@ -13,7 +13,7 @@ on documents
 using hnsw (embedding vector_cosine_ops);
 
 create or replace function match_documents (
-  query_embedding vector(1536),
+  query_embedding vector(768),
   match_count int default 4,
   filter jsonb default '{}'
 ) returns table (
