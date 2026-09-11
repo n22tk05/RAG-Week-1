@@ -24,7 +24,7 @@ export interface QAResponse {
 }
 
 export const chatModel = new ChatGoogleGenerativeAI({
-  model: "gemini-2.0-flash",
+  model: "gemini-3.6-flash",
   temperature: 0,
   apiKey: config.geminiApiKey || "placeholder-key",
 });
