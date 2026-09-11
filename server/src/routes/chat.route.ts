@@ -9,7 +9,7 @@ export const chatRouter = Router();
  */
 chatRouter.post("/", async (req: Request, res: Response): Promise<void> => {
   try {
-    const { question, topK } = req.body;
+    const { question, topK, history } = req.body;
 
     if (!question || typeof question !== "string" || !question.trim()) {
       res.status(400).json({
@@ -20,7 +20,22 @@ chatRouter.post("/", async (req: Request, res: Response): Promise<void> => {
     }
 
     const k = typeof topK === "number" && topK > 0 ? Math.min(topK, 10) : 4;
-    const result = await askQuestion(question, k);
+    const cleanHistory = Array.isArray(history)
+      ? history
+          .filter(
+            (item: any) =>
+              item &&
+              (item.role === "user" || item.role === "assistant") &&
+              typeof item.content === "string" &&
+              item.content.trim()
+          )
+          .map((item: any) => ({
+            role: item.role as "user" | "assistant",
+            content: String(item.content).trim(),
+          }))
+      : [];
+
+    const result = await askQuestion(question, k, cleanHistory);
 
     res.status(200).json({
       success: true,

@@ -1,8 +1,13 @@
 import { ChatGoogleGenerativeAI } from "@langchain/google-genai";
-import { HumanMessage, SystemMessage } from "@langchain/core/messages";
+import { HumanMessage, SystemMessage, AIMessage, type BaseMessage } from "@langchain/core/messages";
 import { config, validateConfig } from "../../config.js";
 import { searchSimilarDocuments } from "./retriever.js";
 import { SYSTEM_PROMPT, formatContext } from "./prompt.js";
+
+export interface HistoryTurn {
+  role: "user" | "assistant";
+  content: string;
+}
 
 export interface SourceCitation {
   source: string;
@@ -24,7 +29,11 @@ export const chatModel = new ChatGoogleGenerativeAI({
   apiKey: config.geminiApiKey || "placeholder-key",
 });
 
-export async function askQuestion(question: string, topK = 4): Promise<QAResponse> {
+export async function askQuestion(
+  question: string,
+  topK = 4,
+  history: HistoryTurn[] = []
+): Promise<QAResponse> {
   validateConfig();
   const startTime = Date.now();
   const trimmed = question.trim();
@@ -46,17 +55,30 @@ export async function askQuestion(question: string, topK = 4): Promise<QARespons
     };
   }
 
-  // 2. Định dạng Context
+  // 2. Định dạng Context & Lịch sử hội thoại
   const docs = retrieved.map((r) => r.document);
   const contextString = formatContext(docs);
 
   const systemMessage = new SystemMessage(
     `${SYSTEM_PROMPT}\n\nNGỮ CẢNH TÀI LIỆU:\n${contextString}`
   );
+
+  // Lấy tối đa 6 lượt tin nhắn gần nhất để giữ ngữ cảnh liền mạch
+  const recentHistory = (history || []).slice(-6);
+  const historyMessages: BaseMessage[] = recentHistory.map((item) =>
+    item.role === "user"
+      ? new HumanMessage(item.content)
+      : new AIMessage(item.content)
+  );
+
   const humanMessage = new HumanMessage(trimmed);
 
-  // 3. Gọi LLM sinh phản hồi
-  const response = await chatModel.invoke([systemMessage, humanMessage]);
+  // 3. Gọi LLM sinh phản hồi với đầy đủ ngữ cảnh hội thoại
+  const response = await chatModel.invoke([
+    systemMessage,
+    ...historyMessages,
+    humanMessage,
+  ]);
   const rawContent = response.content;
   const answer = typeof rawContent === "string" 
     ? rawContent 

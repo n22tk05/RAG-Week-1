@@ -5,7 +5,7 @@ import { ingestDocument } from "../lib/rag/ingest.js";
 const upload = multer({
   storage: multer.memoryStorage(),
   limits: {
-    fileSize: 15 * 1024 * 1024, // 15 MB
+    fileSize: 4.5 * 1024 * 1024, // 4.5 MB
   },
   fileFilter: (_req, file, cb) => {
     const ext = file.originalname.split(".").pop()?.toLowerCase();

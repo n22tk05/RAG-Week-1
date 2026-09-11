@@ -29,7 +29,7 @@ export class GeminiEmbeddings extends Embeddings {
       documents.map(async (doc) => {
         const res = await this.modelClient!.embedContent({
           content: { role: "user", parts: [{ text: doc }] },
-          outputDimensionality: this.dimensions,
+          outputDimensionality: this.dimensions, // Tạo ra 768 dim
         } as any);
         const vals = res.embedding?.values;
         if (!vals || vals.length === 0) {
@@ -46,7 +46,7 @@ export class GeminiEmbeddings extends Embeddings {
     }
     const res = await this.modelClient.embedContent({
       content: { role: "user", parts: [{ text: document }] },
-      outputDimensionality: this.dimensions,
+      outputDimensionality: this.dimensions, // Tạo ra 768 dim
     } as any);
     const vals = res.embedding?.values;
     if (!vals || vals.length === 0) {

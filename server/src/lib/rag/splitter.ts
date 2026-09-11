@@ -7,7 +7,7 @@ export const DEFAULT_CHUNK_OVERLAP = 200;
 export const textSplitter = new RecursiveCharacterTextSplitter({
   chunkSize: DEFAULT_CHUNK_SIZE,
   chunkOverlap: DEFAULT_CHUNK_OVERLAP,
-  separators: ["\n\n", "\n", " ", ""],
+  separators: ["\n\n", "\n", ".", "?", "!", " ", ""],
 });
 
 export interface ChunkMetadata {
