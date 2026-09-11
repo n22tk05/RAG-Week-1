@@ -1,0 +1,836 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Minimal RAG Engine - Slide Giới Thiệu, Kiến Trúc & Demo</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:ital,wght@0,400;0,600;1,400&family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet">
+  
+  <style>
+    /* ── Nền Trắng Thuần Khiết (Pure White Background) ── */
+    :root {
+      --font-body: 'IBM Plex Sans', system-ui, -apple-system, sans-serif;
+      --font-mono: 'IBM Plex Mono', 'SF Mono', Consolas, monospace;
+
+      --bg: #ffffff;
+      --surface: #ffffff;
+      --surface2: #f8fafc;
+      --surface-elevated: #ffffff;
+      --border: #e2e8f0;
+      --border-bright: #cbd5e1;
+      --text: #0f172a;
+      --text-dim: #64748b;
+      --text-bright: #020817;
+      --accent: #2563eb;
+      --accent-dim: #eff6ff;
+
+      --blue: #1d4ed8;
+      --green: #15803d;
+      --amber: #b45309;
+      --red: #dc2626;
+
+      --shadow-sm: 0 1px 3px rgba(0,0,0,0.05), 0 1px 2px rgba(0,0,0,0.03);
+      --shadow-md: 0 4px 20px -2px rgba(0, 0, 0, 0.08);
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: var(--font-body);
+      background: var(--bg);
+      color: var(--text);
+      overflow: hidden;
+      height: 100vh;
+      width: 100vw;
+      user-select: none;
+    }
+
+    /* ── Top Progress Track ── */
+    .progress-track {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 4px;
+      background: #f1f5f9;
+      z-index: 600;
+    }
+    .progress-bar {
+      height: 100%;
+      background: var(--accent);
+      width: 0%;
+      transition: width 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    /* ── Bottom Navigation Chrome ── */
+    .nav-bar {
+      position: fixed;
+      bottom: 24px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 500;
+      background: #ffffff;
+      border: 1px solid var(--border);
+      border-radius: 30px;
+      padding: 6px 16px;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      box-shadow: var(--shadow-md);
+    }
+    .nav-btn {
+      background: transparent;
+      border: none;
+      color: var(--text);
+      font-size: 16px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      transition: background 0.15s;
+    }
+    .nav-btn:hover { background: var(--surface2); }
+    .nav-counter {
+      font-family: var(--font-mono);
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text-dim);
+      min-width: 70px;
+      text-align: center;
+    }
+
+    /* ── Slide Deck Container ── */
+    .deck {
+      height: 100vh;
+      overflow-y: auto;
+      scroll-snap-type: y mandatory;
+      scroll-behavior: smooth;
+    }
+    .slide {
+      height: 100vh;
+      scroll-snap-align: start;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      padding: clamp(30px, 5vh, 60px) clamp(24px, 6vw, 80px);
+      position: relative;
+      background: #ffffff;
+      opacity: 0.15;
+      transform: scale(0.98);
+      transition: opacity 0.4s ease, transform 0.4s ease;
+    }
+    .slide.active {
+      opacity: 1;
+      transform: scale(1);
+    }
+
+    /* ── Typography & Tags ── */
+    .slide__tag {
+      font-family: var(--font-mono);
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+      color: var(--accent);
+      font-weight: 600;
+      margin-bottom: 10px;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .slide__title {
+      font-size: clamp(26px, 3.8vw, 44px);
+      font-weight: 700;
+      line-height: 1.2;
+      color: var(--text-bright);
+      margin-bottom: 14px;
+      letter-spacing: -0.02em;
+    }
+    .slide__desc {
+      font-size: clamp(14px, 1.4vw, 17px);
+      color: var(--text-dim);
+      line-height: 1.55;
+      max-width: 860px;
+      margin-bottom: 24px;
+    }
+
+    /* ── Cards & Grids ── */
+    .grid-2 {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 20px;
+      max-width: 1050px;
+    }
+    .grid-3 {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 18px;
+      max-width: 1080px;
+    }
+    .grid-4 {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 16px;
+      max-width: 1100px;
+    }
+    .card {
+      background: #ffffff;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 20px;
+      box-shadow: var(--shadow-sm);
+    }
+    .card__heading {
+      font-size: 16px;
+      font-weight: 600;
+      color: var(--text-bright);
+      margin-bottom: 6px;
+    }
+    .card__text {
+      font-size: 13.5px;
+      color: var(--text-dim);
+      line-height: 1.5;
+    }
+
+    /* ── Diagram Slides & Maximum Frame Size ── */
+    .slide--diagram {
+      padding: 14px clamp(16px, 2.5vw, 36px) 66px !important;
+      justify-content: flex-start !important;
+      align-items: stretch !important;
+    }
+    .slide--diagram .slide__tag {
+      margin-bottom: 2px;
+      font-size: 11px;
+    }
+    .slide--diagram .slide__title {
+      font-size: clamp(18px, 2vw, 24px);
+      margin-bottom: 8px;
+    }
+    .slide--diagram .slide__desc {
+      margin-bottom: 8px;
+      font-size: 13px;
+    }
+
+    /* ── White Diagram Frame (Maximized) ── */
+    .diagram-frame {
+      background: #ffffff;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 12px 18px;
+      box-shadow: var(--shadow-sm);
+      overflow: auto;
+      width: 100%;
+      max-width: min(1750px, 96vw);
+      height: calc(100vh - 140px);
+      max-height: calc(100vh - 140px);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      margin: 0 auto;
+    }
+    .diagram-frame pre.mermaid {
+      width: 100%;
+      height: 100%;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      margin: 0;
+    }
+    .diagram-frame svg {
+      max-width: 100% !important;
+      max-height: 100% !important;
+      width: 100% !important;
+      height: 100% !important;
+      object-fit: contain;
+    }
+
+    /* ── Mockup Windows for Demo ── */
+    .mockup-window {
+      background: #ffffff;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      box-shadow: var(--shadow-md);
+      overflow: hidden;
+      max-width: min(1360px, 94vw);
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+    }
+    .mockup-header {
+      background: #f8fafc;
+      padding: 8px 14px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      border-bottom: 1px solid var(--border);
+    }
+    .dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+    }
+    .dot-red { background: #ef4444; }
+    .dot-yellow { background: #f59e0b; }
+    .dot-green { background: #10b981; }
+    .mockup-address {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      color: var(--text-dim);
+      margin-left: 10px;
+      background: #ffffff;
+      padding: 2px 10px;
+      border-radius: 4px;
+      border: 1px solid var(--border);
+    }
+    .mockup-body {
+      padding: 20px;
+      display: grid;
+      gap: 14px;
+      background: #ffffff;
+    }
+
+    .tech-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-family: var(--font-mono);
+      font-size: 12px;
+      padding: 5px 10px;
+      border-radius: 6px;
+      background: #f8fafc;
+      color: var(--text);
+      border: 1px solid var(--border);
+      font-weight: 500;
+    }
+
+    @media (max-width: 768px) {
+      .grid-2, .grid-3, .grid-4 { grid-template-columns: 1fr; }
+      .slide { padding: 24px 16px 80px; overflow-y: auto; }
+      .diagram-frame { max-height: 65vh; }
+    }
+  </style>
+  <script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script>
+</head>
+<body>
+  <!-- Progress Bar -->
+  <div class="progress-track"><div class="progress-bar" id="progressBar"></div></div>
+
+  <!-- Bottom Navigation -->
+  <div class="nav-bar">
+    <button class="nav-btn" id="prevBtn" title="Slide trước (Phím ←)">&#8592;</button>
+    <div class="nav-counter" id="navCounter">1 / 11</div>
+    <button class="nav-btn" id="nextBtn" title="Slide tiếp (Phím →)">&#8594;</button>
+  </div>
+
+  <!-- Main Slide Deck -->
+  <div class="deck" id="slideDeck">
+
+    <!-- SLIDE 1: Title & Hero -->
+    <section class="slide active" id="slide-1">
+      <div class="slide__tag">Proof of Concept &bull; Week 1</div>
+      <h1 class="slide__title">Minimal RAG Engine</h1>
+      <p class="slide__desc">Hệ thống hỏi đáp tài liệu tự động sử dụng kỹ thuật Retrieval-Augmented Generation gọn nhẹ, chính xác cao, triệt tiêu hiện tượng ảo giác và minh bạch nguồn tham chiếu.</p>
+      
+      <div class="grid-3">
+        <div class="card">
+          <div class="card__heading">Nhanh & Tinh Gọn</div>
+          <div class="card__text">Xây dựng trọn vẹn với TypeScript, Express, Supabase pgvector và Gemini 2.0 Flash.</div>
+        </div>
+        <div class="card">
+          <div class="card__heading">Minh Bạch Nguồn</div>
+          <div class="card__text">Mỗi câu trả lời đều đi kèm bằng chứng trích dẫn nguyên văn cùng điểm tương đồng (score).</div>
+        </div>
+        <div class="card">
+          <div class="card__heading">An Toàn Dữ Liệu</div>
+          <div class="card__text">Cơ chế bảo vệ Quota API, giới hạn rate limit và lưu trữ vector database cô lập.</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- SLIDE 2: Idea Sản Phẩm -->
+    <section class="slide" id="slide-2">
+      <div class="slide__tag">Idea Sản Phẩm & Bài Toán Giải Quyết</div>
+      <h2 class="slide__title">Tại Sao Cần Minimal RAG Engine?</h2>
+      <p class="slide__desc">Mô hình AI lớn (LLM) tuy thông minh nhưng thường gặp phải 2 điểm yếu chí tử: không có dữ liệu nội bộ riêng và dễ bị "ảo giác" (bịa đặt thông tin). Minimal RAG Engine giải quyết trọn vẹn bài toán này.</p>
+      
+      <div class="grid-2">
+        <div class="card" style="border-left: 4px solid #ef4444;">
+          <div class="card__heading" style="color: #ef4444;">Vấn Đề Thực Tế (Problem)</div>
+          <ul style="padding-left: 20px; line-height: 1.8; font-size: 13.5px; color: var(--text-dim); margin-top: 8px;">
+            <li>ChatGPT/Gemini mặc định không biết dữ liệu tài liệu cá nhân (.pdf, .txt, .md).</li>
+            <li>Dễ tự bịa câu trả lời khi gặp câu hỏi chuyên sâu ngoài kiến thức huấn luyện.</li>
+            <li>Không thể đối chiếu lại nguồn gốc thông tin xem được trích từ tài liệu nào.</li>
+            <li>Chi phí nhồi toàn bộ tài liệu dài vào prompt rất tốn kém và độ trễ cao.</li>
+          </ul>
+        </div>
+
+        <div class="card" style="border-left: 4px solid var(--green);">
+          <div class="card__heading" style="color: var(--green);">Giải Pháp RAG (Solution)</div>
+          <ul style="padding-left: 20px; line-height: 1.8; font-size: 13.5px; color: var(--text-dim); margin-top: 8px;">
+            <li><strong>Chặt nhỏ & lập chỉ mục (Chunking):</strong> Cắt tài liệu thành từng phần và biểu diễn dưới dạng Vector 768 chiều.</li>
+            <li><strong>Truy xuất chính xác (Retrieval):</strong> Chỉ tìm đúng 4 đoạn có nội dung liên quan nhất khi người dùng hỏi.</li>
+            <li><strong>Grounding Prompt:</strong> Bắt buộc AI chỉ được phép trả lời dựa trên 4 đoạn tài liệu đã cấp.</li>
+            <li><strong>Dẫn chứng minh bạch:</strong> Hiển thị rõ trích đoạn, tên file và số thứ tự chunk.</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <!-- SLIDE 3: Techstack Sử Dụng -->
+    <section class="slide" id="slide-3">
+      <div class="slide__tag">Công Nghệ Lõi (Tech Stack)</div>
+      <h2 class="slide__title">Kiến Trúc Công Nghệ Hiện Đại & Nhẹ Nhàng</h2>
+      <p class="slide__desc">Lựa chọn các công cụ tiêu chuẩn ngành nhằm đạt hiệu năng cao nhất với chi phí vận hành thấp nhất.</p>
+      
+      <div class="grid-4">
+        <div class="card">
+          <div class="card__heading">Giao Diện (Frontend)</div>
+          <div style="display: flex; flex-direction: column; gap: 8px; margin-top: 10px;">
+            <span class="tech-pill">React 18 + Vite</span>
+            <span class="tech-pill">Tailwind CSS</span>
+            <span class="tech-pill">Lucide React</span>
+            <span class="tech-pill">LocalStorage Sessions</span>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card__heading">Máy Chủ (Backend)</div>
+          <div style="display: flex; flex-direction: column; gap: 8px; margin-top: 10px;">
+            <span class="tech-pill">Node.js + Express 5</span>
+            <span class="tech-pill">TypeScript Toàn Diện</span>
+            <span class="tech-pill">Multer (RAM Buffer)</span>
+            <span class="tech-pill">pdf-parse Module</span>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card__heading">RAG & AI Layer</div>
+          <div style="display: flex; flex-direction: column; gap: 8px; margin-top: 10px;">
+            <span class="tech-pill">LangChain Ecosystem</span>
+            <span class="tech-pill">Gemini 2.0 Flash (QA)</span>
+            <span class="tech-pill">Gemini Embedding-001</span>
+            <span class="tech-pill">Recursive Splitter</span>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card__heading">Vector Database</div>
+          <div style="display: flex; flex-direction: column; gap: 8px; margin-top: 10px;">
+            <span class="tech-pill">Supabase Database</span>
+            <span class="tech-pill">PostgreSQL pgvector</span>
+            <span class="tech-pill">HNSW Vector Index</span>
+            <span class="tech-pill">Cosine Sim RPC</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- SLIDE 4: Sơ Đồ 1 - Kiến Trúc Tổng Thể Từ docs/workflow.md -->
+    <section class="slide slide--diagram" id="slide-4">
+      <div class="slide__tag">Sơ Đồ 1 &bull; Kiến Trúc Tổng Thể</div>
+      <h2 class="slide__title">Kiến Trúc Toàn Hệ Thống & Luồng Dữ Liệu</h2>
+      
+      <div class="diagram-frame">
+        <pre class="mermaid">
+flowchart TD
+    subgraph CLIENT["Lớp Giao Diện (Client - React + Vite + Tailwind)"]
+        UI_Doc["DocumentPanel<br/>(Upload và Quản lý File)"]
+        UI_Chat["ChatPanel<br/>(Hỏi đáp và Lịch sử)"]
+        UI_Store[("LocalStorage<br/>(Lưu Session Chat)")]
+        UI_Chat --- UI_Store
+    end
+
+    subgraph API_GATEWAY["Lớp Cổng Dịch Vụ (Express Server)"]
+        R_Ingest["POST /api/ingest<br/>(Multer Memory Storage)"]
+        R_Chat["POST /api/chat<br/>(Validation và TopK)"]
+        R_Docs["GET & DELETE /api/documents<br/>(Thống kê và Xóa)"]
+    end
+
+    subgraph PIPELINE_INGEST["Pipeline 1: Nạp và Xử Lý Dữ Liệu"]
+        P_Load["1. loader.ts<br/>(Trích xuất .txt, .md, .pdf)"]
+        P_Split["2. splitter.ts<br/>(Chunk Size 1000, Overlap 200)"]
+        P_Batch["3. vector-store.ts<br/>(Batch tối đa 15 chunks + Delay 1s)"]
+        P_Embed_API["Google Gemini API<br/>(gemini-embedding-001)"]
+    end
+
+    subgraph PIPELINE_QA["Pipeline 2: Truy Xuất và Sinh Câu Trả Lời"]
+        Q_Embed["1. embedQuery()<br/>(Tạo vector câu hỏi 768 chiều)"]
+        Q_RPC["2. match_documents()<br/>(Cosine Similarity)"]
+        Q_Prompt["3. prompt.ts<br/>(Ghép Context + Lịch Sử)"]
+        Q_LLM["4. chain.ts (gemini-2.0-flash)<br/>(Sinh câu trả lời + Trích dẫn)"]
+    end
+
+    subgraph DATABASE["Cơ Sở Dữ Liệu Vector (Supabase pgvector)"]
+        DB_Table[("Bảng documents<br/>- content text<br/>- metadata jsonb<br/>- embedding vector 768")]
+        DB_Index["HNSW Index<br/>(vector_cosine_ops)"]
+        DB_Table --- DB_Index
+    end
+
+    %% Tương tác Ingestion
+    UI_Doc -->|1. Upload File| R_Ingest
+    R_Ingest --> P_Load
+    P_Load --> P_Split
+    P_Split --> P_Batch
+    P_Batch --> P_Embed_API
+    P_Embed_API --> P_Batch
+    P_Batch -->|Lưu Chunks và Vector| DB_Table
+
+    %% Tương tác Q&A
+    UI_Chat -->|2. Gửi câu hỏi| R_Chat
+    R_Chat --> Q_Embed
+    Q_Embed --> P_Embed_API
+    P_Embed_API --> Q_Embed
+    Q_Embed --> Q_RPC
+    Q_RPC -->|Truy vấn Top K| DB_Table
+    DB_Table -->|Trả về Chunks liên quan| Q_Prompt
+    Q_Prompt --> Q_LLM
+    Q_LLM -->|3. Trả về Answer + Citations| UI_Chat
+
+    %% Quản lý Docs
+    UI_Doc --> R_Docs
+    R_Docs --> DB_Table
+        </pre>
+      </div>
+    </section>
+
+    <!-- SLIDE 5: Sơ Đồ 2 - Pipeline 1 Sequence Flow Từ docs/workflow.md -->
+    <section class="slide slide--diagram" id="slide-5">
+      <div class="slide__tag">Sơ Đồ 2 &bull; docs/workflow.md</div>
+      <h2 class="slide__title">Sequence Flow: Quy Trình Nạp Dữ Liệu (Ingestion Pipeline)</h2>
+      
+      <div class="diagram-frame">
+        <pre class="mermaid">
+sequenceDiagram
+    autonumber
+    actor User as Người dùng
+    participant UI as DocumentPanel.tsx
+    participant Route as ingest.route.ts
+    participant Loader as loader.ts
+    participant Splitter as splitter.ts
+    participant VStore as vector-store.ts
+    participant Gemini as Gemini Embedding API
+    participant Supa as Supabase (pgvector)
+
+    User->>UI: Chọn tệp tin (.txt, .md, .pdf) & nhấn "Tải dữ liệu"
+    UI->>Route: POST /api/ingest (multipart/form-data)
+    Route->>Loader: loadDocument(buffer, filename)
+    Note over Loader: Trích xuất text thô (dùng pdf-parse cho PDF)
+    Loader-->>Route: rawText
+    Route->>Splitter: splitTextToChunks(rawText, filename)
+    Note over Splitter: Recursive Splitter (size: 1000, overlap: 200)
+    Splitter-->>Route: Danh sách Document Chunks kèm Metadata
+    Route->>VStore: vectorStore.addDocuments(chunks)
+    loop Xử lý theo từng batch (tối đa 15 chunks)
+        VStore->>Gemini: embedContent() cho từng chunk
+        Gemini-->>VStore: Vector embedding (768 chiều)
+        Note over VStore: Nghỉ 1000ms giữa các batch (nếu > 15 chunks)
+    end
+    VStore->>Supa: INSERT INTO documents (content, metadata, embedding)
+    Supa-->>VStore: Ghi nhận thành công
+    VStore-->>Route: Hoàn tất quá trình nạp
+    Route-->>UI: 200 OK: { filename, chunksCount, timeMs, previewChunks }
+    UI-->>User: Hiển thị thông báo thành công & cập nhật thống kê
+        </pre>
+      </div>
+    </section>
+
+    <!-- SLIDE 6: Sơ Đồ 3 - Pipeline 2 Sequence Flow Từ docs/workflow.md -->
+    <section class="slide slide--diagram" id="slide-6">
+      <div class="slide__tag">Sơ Đồ 3 &bull; docs/workflow.md</div>
+      <h2 class="slide__title">Sequence Flow: Quy Trình Hỏi Đáp RAG (Q&A & Retrieval)</h2>
+      
+      <div class="diagram-frame">
+        <pre class="mermaid">
+sequenceDiagram
+    autonumber
+    actor User as Người dùng
+    participant UI as ChatPanel.tsx
+    participant Route as chat.route.ts
+    participant Chain as chain.ts
+    participant Retriever as retriever.ts
+    participant GeminiAPI as Google Gemini API
+    participant Supa as Supabase (match_documents)
+
+    User->>UI: Nhập câu hỏi (VD: "Kiến trúc RAG là gì?")
+    UI->>Route: POST /api/chat { question, history, topK: 4 }
+    Route->>Chain: askQuestion(question, topK, history)
+    Chain->>Retriever: searchSimilarDocuments(question, topK)
+    Retriever->>GeminiAPI: embedQuery(question) -> 768 dims
+    GeminiAPI-->>Retriever: query_embedding
+    Retriever->>Supa: RPC match_documents(query_embedding, match_count: 4)
+    Note over Supa: Tính Cosine Similarity: 1 - (embedding <=> query_embedding)
+    Supa-->>Retriever: Top K chunks tương đồng nhất + Điểm score
+    Retriever-->>Chain: retrievedDocs[]
+    Chain->>Chain: Định dạng System Prompt + Context + 6 Lượt Chat History
+    Chain->>GeminiAPI: chatModel.invoke([SystemMessage, ...History, HumanMessage])
+    GeminiAPI-->>Chain: AIMessage (Nội dung câu trả lời)
+    Chain-->>Route: QAResponse: { question, answer, sources, timeMs }
+    Route-->>UI: 200 OK
+    UI->>UI: Lưu session vào LocalStorage & Render UI
+    UI-->>User: Hiển thị câu trả lời kèm Thẻ Trích Dẫn (Citation Cards)
+        </pre>
+      </div>
+    </section>
+
+    <!-- SLIDE 7: Sơ Đồ 4 - Pipeline 3 Flowchart Từ docs/workflow.md -->
+    <section class="slide slide--diagram" id="slide-7">
+      <div class="slide__tag">Sơ Đồ 4 &bull; Quản Lý & Giám Sát Tài Liệu</div>
+      <h2 class="slide__title">Flowchart: Quản Lý & Giám Sát Tài Liệu</h2>
+      <p class="slide__desc">Quy trình truy xuất thống kê số lượng chunks theo thời gian thực và xóa sạch các vector theo từng nguồn dữ liệu.</p>
+      
+      <div class="diagram-frame">
+        <pre class="mermaid">
+flowchart LR
+    subgraph UI["Giao diện Người Dùng"]
+        Btn_Stats["Xem thống kê số chunks"]
+        Btn_Del["Xóa tài liệu theo tên file"]
+    end
+
+    subgraph API["Route API (Express)"]
+        GET_Docs["GET /api/documents"]
+        DEL_Docs["DELETE /api/documents/source"]
+    end
+
+    subgraph STORE["Vector Store Logic"]
+        fn_stats["getIngestionStats()"]
+        fn_del["deleteDocumentsBySource()"]
+    end
+
+    subgraph DB["Supabase pgvector"]
+        tbl[("Bảng documents")]
+    end
+
+    Btn_Stats --> GET_Docs
+    GET_Docs --> fn_stats
+    fn_stats --> tbl
+
+    Btn_Del --> DEL_Docs
+    DEL_Docs --> fn_del
+    fn_del --> tbl
+        </pre>
+      </div>
+    </section>
+
+    <!-- SLIDE 8: Demo Trang 1 - Quản Lý Tài Liệu -->
+    <section class="slide" id="slide-8">
+      <div class="slide__tag">Demo Màn Hình 1 / 4</div>
+      <h2 class="slide__title">Màn Hình Quản Lý & Nạp Tài Liệu (Document Panel)</h2>
+      <p class="slide__desc">Bảng bên trái cung cấp khả năng tải lên tệp tin kéo-thả, xem số lượng tệp đã index và xóa tài liệu tức thì.</p>
+
+      <div class="mockup-window">
+        <div class="mockup-header">
+          <div class="dot dot-red"></div>
+          <div class="dot dot-yellow"></div>
+          <div class="dot dot-green"></div>
+          <div class="mockup-address">http://localhost:5173 • Quản lý tài liệu</div>
+        </div>
+        <div class="mockup-body">
+          <div style="background: #f8fafc; border: 2px dashed #3b82f6; border-radius: 12px; padding: 24px; text-align: center;">
+            <div style="font-weight: 600; font-size: 15px; margin-top: 6px;">Kéo thả hoặc nhấp để chọn tệp tin</div>
+            <div style="font-size: 12px; color: var(--text-dim); margin-top: 4px;">Hỗ trợ .txt, .md, .pdf (Dung lượng tối đa 4.5MB)</div>
+          </div>
+          <div style="display: flex; justify-content: space-between; align-items: center; padding: 12px 16px; background: #f8fafc; border-radius: 8px; border: 1px solid var(--border);">
+            <div style="display: flex; align-items: center; gap: 8px; font-size: 13.5px; font-weight: 600;">
+              <span>rag-introduction.pdf</span> <span style="font-size: 11px; color: var(--text-dim); font-weight: normal;">(12 đoạn chunks)</span>
+            </div>
+            <span style="color: #ef4444; cursor: pointer; font-size: 13px; font-weight: 600;">Xóa</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- SLIDE 9: Demo Trang 2 - Khung Chat Q&A -->
+    <section class="slide" id="slide-9">
+      <div class="slide__tag">Demo Màn Hình 2 / 4</div>
+      <h2 class="slide__title">Giao Diện Hỏi Đáp Q&A Thông Minh (Chat Panel)</h2>
+      <p class="slide__desc">Khung hội thoại trung tâm hỗ trợ phím tắt Enter để gửi, tự động cuộn xuống tin nhắn mới và gợi ý câu hỏi mẫu.</p>
+
+      <div class="mockup-window">
+        <div class="mockup-header">
+          <div class="dot dot-red"></div>
+          <div class="dot dot-yellow"></div>
+          <div class="dot dot-green"></div>
+          <div class="mockup-address">http://localhost:5173 • Chat Q&A</div>
+        </div>
+        <div class="mockup-body" style="gap: 12px;">
+          <div style="align-self: flex-end; background: #2563eb; color: white; padding: 12px 18px; border-radius: 16px 16px 2px 16px; font-size: 13.5px; max-width: 70%;">
+            Kiến trúc RAG là gì và gồm những thành phần nào?
+          </div>
+          <div style="align-self: flex-start; background: #f8fafc; border: 1px solid var(--border); padding: 14px 18px; border-radius: 16px 16px 16px 2px; font-size: 13.5px; max-width: 80%; line-height: 1.6;">
+            Kiến trúc RAG (Retrieval-Augmented Generation) là sự kết hợp giữa hệ thống truy xuất dữ liệu từ vector database và mô hình ngôn ngữ lớn (LLM). Gồm 2 pha chính: 1. Nạp và lập chỉ mục văn bản (Ingestion), 2. Truy vấn tương đồng ngữ nghĩa và sinh câu trả lời (Retrieval & Generation).
+          </div>
+          <div style="display: flex; gap: 8px; margin-top: 8px; border-top: 1px solid var(--border); padding-top: 12px;">
+            <div style="flex: 1; padding: 10px 14px; background: #f8fafc; border: 1px solid var(--border); border-radius: 8px; font-size: 13px; color: var(--text-dim);">
+              Nhập câu hỏi dựa trên tài liệu... (Nhấn Enter để gửi)
+            </div>
+            <button style="background: #2563eb; color: white; border: none; padding: 0 20px; border-radius: 8px; font-weight: 600; font-size: 13px;">Gửi</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- SLIDE 10: Demo Trang 3 - Trích Dẫn Citations -->
+    <section class="slide" id="slide-10">
+      <div class="slide__tag">Demo Màn Hình 3 / 4</div>
+      <h2 class="slide__title">Thẻ Nguồn Trích Dẫn Minh Bạch (Citation Cards)</h2>
+      <p class="slide__desc">Dưới mỗi câu trả lời, người dùng có thể nhấp để mở rộng thẻ trích dẫn, đọc nguyên văn đoạn văn bản mà AI đã dùng làm căn cứ.</p>
+
+      <div class="mockup-window">
+        <div class="mockup-header">
+          <div class="dot dot-red"></div>
+          <div class="dot dot-yellow"></div>
+          <div class="dot dot-green"></div>
+          <div class="mockup-address">http://localhost:5173 • Citation Card Viewer</div>
+        </div>
+        <div class="mockup-body">
+          <div style="font-family: var(--font-mono); font-size: 12px; font-weight: 700; color: #2563eb; text-transform: uppercase;">
+            NGUỒN TÀI LIỆU THAM CHIẾU (3):
+          </div>
+
+          <div style="border: 1px solid #bfdbfe; background: #ffffff; border-radius: 8px; overflow: hidden;">
+            <div style="padding: 10px 14px; background: #eff6ff; display: flex; justify-content: space-between; align-items: center; font-size: 13px; font-weight: 600; color: #1e40af;">
+              <span>[1] sample-product-specs.txt (Đoạn #2)</span>
+              <span style="font-size: 11px; background: #dbeafe; padding: 2px 8px; border-radius: 4px;">Score: 0.8842</span>
+            </div>
+            <div style="padding: 12px 14px; font-size: 13px; color: var(--text); border-top: 1px solid #bfdbfe; font-style: italic; background: #ffffff;">
+              "Pin dung lượng 5000mAh hỗ trợ sạc nhanh 65W cho phép nạp đầy trong 35 phút. Hệ thống tản nhiệt buồng hơi chất lỏng thế hệ thứ 3..."
+            </div>
+          </div>
+
+          <div style="border: 1px solid var(--border); background: #ffffff; border-radius: 8px; padding: 10px 14px; display: flex; justify-content: space-between; font-size: 13px; color: var(--text-dim);">
+            <span>[2] user-guide.md (Đoạn #0)</span>
+            <span style="font-size: 11px;">Score: 0.8120 &bull; Nhấp để xem</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- SLIDE 11: Demo Trang 4 - Lịch Sử Đa Phiên -->
+    <section class="slide" id="slide-11">
+      <div class="slide__tag">Demo Màn Hình 4 / 4</div>
+      <h2 class="slide__title">Quản Lý Lịch Sử Đa Phiên (Chat History Drawer)</h2>
+      <p class="slide__desc">Menu trượt ngang (Slide-over Drawer) cho phép người dùng chuyển đổi qua lại giữa các chủ đề hỏi đáp, đổi tên hoặc dọn dẹp lịch sử.</p>
+
+      <div class="mockup-window">
+        <div class="mockup-header">
+          <div class="dot dot-red"></div>
+          <div class="dot dot-yellow"></div>
+          <div class="dot dot-green"></div>
+          <div class="mockup-address">http://localhost:5173 • Chat History Drawer</div>
+        </div>
+        <div class="mockup-body" style="grid-template-columns: 1fr 1fr; gap: 16px;">
+          <div style="display: flex; flex-direction: column; gap: 8px;">
+            <div style="font-size: 12px; font-weight: 700; color: var(--text-dim); text-transform: uppercase;">Các phiên trò chuyện</div>
+            
+            <div style="padding: 10px; background: #eff6ff; border: 1px solid #bfdbfe; border-radius: 8px; font-size: 13px; font-weight: 600; color: #1e40af;">
+              Hỏi đáp kiến trúc RAG
+              <div style="font-size: 10px; color: var(--text-dim); font-weight: normal; margin-top: 4px;">4 tin nhắn &bull; Vừa xong</div>
+            </div>
+
+            <div style="padding: 10px; background: #ffffff; border: 1px solid var(--border); border-radius: 8px; font-size: 13px; color: var(--text);">
+              Thông số kỹ thuật sản phẩm
+              <div style="font-size: 10px; color: var(--text-dim); margin-top: 4px;">2 tin nhắn &bull; 25 phút trước</div>
+            </div>
+
+            <div style="padding: 10px; background: #ffffff; border: 1px solid var(--border); border-radius: 8px; font-size: 13px; color: var(--text);">
+              Thử nghiệm câu hỏi ngoài luồng
+              <div style="font-size: 10px; color: var(--text-dim); margin-top: 4px;">2 tin nhắn &bull; Hôm qua</div>
+            </div>
+          </div>
+
+          <div style="background: #f8fafc; padding: 16px; border-radius: 8px; display: flex; flex-direction: column; justify-content: center; gap: 8px; border: 1px solid var(--border);">
+            <div style="font-size: 14px; font-weight: 700; color: var(--text-bright);">Tính Năng Quản Trị Phiên:</div>
+            <div style="font-size: 12.5px; color: var(--text-dim);">&bull; Tự động đặt tên chủ đề theo câu hỏi đầu tiên.</div>
+            <div style="font-size: 12.5px; color: var(--text-dim);">&bull; Hỗ trợ đổi tên (Rename) trực tiếp trên giao diện.</div>
+            <div style="font-size: 12.5px; color: var(--text-dim);">&bull; Xóa từng phiên hoặc xóa sạch toàn bộ bộ nhớ.</div>
+            <div style="font-size: 12.5px; color: var(--text-dim);">&bull; Lưu trữ bền vững ngay trên trình duyệt qua LocalStorage.</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </div>
+
+  <!-- Slide Engine Script -->
+  <script>
+    (function() {
+      const deck = document.getElementById('slideDeck');
+      const slides = Array.from(document.querySelectorAll('.slide'));
+      const prevBtn = document.getElementById('prevBtn');
+      const nextBtn = document.getElementById('nextBtn');
+      const counter = document.getElementById('navCounter');
+      const progressBar = document.getElementById('progressBar');
+      let currentIndex = 0;
+
+      function updateSlide(index) {
+        if (index < 0 || index >= slides.length) return;
+        currentIndex = index;
+        slides[currentIndex].scrollIntoView({ behavior: 'smooth' });
+        
+        slides.forEach((s, idx) => {
+          if (idx === currentIndex) s.classList.add('active');
+          else s.classList.remove('active');
+        });
+
+        counter.textContent = `${currentIndex + 1} / ${slides.length}`;
+        const pct = ((currentIndex + 1) / slides.length) * 100;
+        progressBar.style.width = `${pct}%`;
+      }
+
+      prevBtn.addEventListener('click', () => updateSlide(currentIndex - 1));
+      nextBtn.addEventListener('click', () => updateSlide(currentIndex + 1));
+
+      window.addEventListener('keydown', (e) => {
+        if (e.key === 'ArrowRight' || e.key === ' ' || e.key === 'PageDown') {
+          e.preventDefault();
+          updateSlide(currentIndex + 1);
+        } else if (e.key === 'ArrowLeft' || e.key === 'PageUp') {
+          e.preventDefault();
+          updateSlide(currentIndex - 1);
+        }
+      });
+
+      const observer = new IntersectionObserver((entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            const idx = slides.indexOf(entry.target);
+            if (idx !== -1) {
+              currentIndex = idx;
+              slides.forEach((s, i) => s.classList.toggle('active', i === idx));
+              counter.textContent = `${idx + 1} / ${slides.length}`;
+              progressBar.style.width = `${((idx + 1) / slides.length) * 100}%`;
+            }
+          }
+        });
+      }, { threshold: 0.6 });
+
+      slides.forEach((s) => observer.observe(s));
+
+      // Initialize Mermaid with pure white background theme & maximized render dimensions
+      mermaid.initialize({
+        startOnLoad: true,
+        theme: 'default',
+        themeVariables: {
+          background: '#ffffff',
+          primaryColor: '#eff6ff',
+          primaryBorderColor: '#3b82f6',
+          primaryTextColor: '#1e40af',
+          lineColor: '#64748b',
+          secondaryColor: '#f0fdf4',
+          tertiaryColor: '#faf5ff',
+          fontSize: '15px',
+          fontFamily: 'IBM Plex Sans, sans-serif'
+        },
+        flowchart: { useMaxWidth: false, htmlLabels: true, curve: 'basis' },
+        sequence: { useMaxWidth: false }
+      });
+
+      updateSlide(0);
+    })();
+  </script>
+</body>
+</html>

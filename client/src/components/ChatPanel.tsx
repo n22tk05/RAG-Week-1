@@ -245,6 +245,7 @@ export const ChatPanel: React.FC = () => {
                   {msg.sources.length}):
                 </div>
                 <div className="grid gap-1.5">
+                  {console.log(msg)}
                   {msg.sources.map((cit, idx) => (
                     <CitationCard key={idx} citation={cit} index={idx} />
                   ))}
